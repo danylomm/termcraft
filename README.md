@@ -37,6 +37,8 @@ Automated setup for a modern, powerful terminal environment with zsh, oh-my-zsh,
 - **xh** - Better curl for APIs
 - **tldr** - Quick command cheat sheets
 - **procs** - Better ps
+- **yazi** - Terminal file manager
+- **glow** - Markdown renderer
 
 ### Custom Aliases & Functions
 - `view` - Quick image viewer using feh

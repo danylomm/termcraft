@@ -191,6 +191,8 @@ install_modern_tools() {
         "xh:better curl"
         "tldr:quick cheat sheets"
         "procs:better ps"
+        "yazi:terminal file manager"
+        "glow:markdown renderer"
     )
 
     local to_install=()

@@ -1,0 +1,21 @@
+# Backup files
+*.backup
+*.bak
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local test files
+test/
+tmp/
+
+# Machine-specific configs (these should never be committed)
+.zshrc.local

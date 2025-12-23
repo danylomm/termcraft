@@ -354,21 +354,32 @@ install_modern_tools() {
     local arch_alt
     arch_alt=$(get_arch_alt)
 
-    # Tools available via apt on Ubuntu
-    local apt_tools=(
-        "btop:btop:system monitor"
-        "ripgrep:rg:fast search"
-        "eza:eza:better ls"
-        "fd-find:fdfind:better find"
-        "bat:batcat:better cat"
-        "zoxide:zoxide:smart cd"
-        "git-delta:delta:beautiful git diffs"
-        "tldr:tldr:quick cheat sheets"
+    # Tools list format: "apt_pkg:brew_pkg:apt_check:brew_check:description"
+    # apt_check = binary name on apt, brew_check = binary name on brew
+    local tools=(
+        "btop:btop:btop:btop:system monitor"
+        "ripgrep:ripgrep:rg:rg:fast search"
+        "eza:eza:eza:eza:better ls"
+        "fd-find:fd:fdfind:fd:better find"
+        "bat:bat:batcat:bat:better cat"
+        "zoxide:zoxide:zoxide:zoxide:smart cd"
+        "git-delta:git-delta:delta:delta:beautiful git diffs"
+        "tldr:tldr:tldr:tldr:quick cheat sheets"
     )
 
-    # Tools that need GitHub binary installation on Ubuntu
+    # Tools only available via brew on macOS (GitHub release on Linux)
+    local brew_only_tools=(
+        "dust:dust:visual disk usage"
+        "sd:sd:simpler sed"
+        "xh:xh:better curl"
+        "procs:procs:better ps"
+        "yazi:yazi:terminal file manager"
+        "glow:glow:markdown renderer"
+        "lazygit:lazygit:git terminal UI"
+    )
+
+    # Tools that need GitHub binary installation on Linux
     # Format: "repo:binary_name:asset_pattern:description"
-    # Note: Some projects use aarch64, others use arm64 for ARM architecture
     local github_tools=()
     if command_exists apt-get; then
         github_tools=(
@@ -382,27 +393,69 @@ install_modern_tools() {
         )
     fi
 
-    local apt_to_install=()
+    local pkgs_to_install=()
 
-    # Check apt tools
-    for tool_desc in "${apt_tools[@]}"; do
-        local pkg="${tool_desc%%:*}"
+    # Determine which package manager we're using
+    local pkg_manager=""
+    if command_exists brew; then
+        pkg_manager="brew"
+    elif command_exists apt-get; then
+        pkg_manager="apt"
+    elif command_exists dnf; then
+        pkg_manager="dnf"
+    elif command_exists pacman; then
+        pkg_manager="pacman"
+    fi
+
+    # Check and collect packages to install
+    for tool_desc in "${tools[@]}"; do
+        local apt_pkg="${tool_desc%%:*}"
         local rest="${tool_desc#*:}"
-        local check_cmd="${rest%%:*}"
+        local brew_pkg="${rest%%:*}"
+        rest="${rest#*:}"
+        local apt_check="${rest%%:*}"
+        rest="${rest#*:}"
+        local brew_check="${rest%%:*}"
         local desc="${rest#*:}"
 
-        if command_exists "$check_cmd"; then
-            log_success "$desc ($check_cmd) already installed"
+        # Check if already installed (check both possible binary names)
+        if command_exists "$brew_check" || command_exists "$apt_check"; then
+            local installed_cmd="$brew_check"
+            command_exists "$apt_check" && installed_cmd="$apt_check"
+            log_success "$desc ($installed_cmd) already installed"
         else
-            apt_to_install+=("$pkg")
+            # Select package name based on package manager
+            if [ "$pkg_manager" = "brew" ]; then
+                pkgs_to_install+=("$brew_pkg")
+            else
+                pkgs_to_install+=("$apt_pkg")
+            fi
         fi
     done
 
-    # Install apt packages
-    if [ ${#apt_to_install[@]} -gt 0 ]; then
-        log_info "Installing from apt: ${apt_to_install[*]}"
+    # On macOS, also check brew-only tools
+    if [ "$pkg_manager" = "brew" ]; then
+        for tool_desc in "${brew_only_tools[@]}"; do
+            local pkg="${tool_desc%%:*}"
+            local rest="${tool_desc#*:}"
+            local check_cmd="${rest%%:*}"
+            local desc="${rest#*:}"
 
-        if command_exists apt-get; then
+            if command_exists "$check_cmd"; then
+                log_success "$desc ($check_cmd) already installed"
+            else
+                pkgs_to_install+=("$pkg")
+            fi
+        done
+    fi
+
+    # Install packages
+    if [ ${#pkgs_to_install[@]} -gt 0 ]; then
+        log_info "Installing: ${pkgs_to_install[*]}"
+
+        if [ "$pkg_manager" = "brew" ]; then
+            brew install "${pkgs_to_install[@]}" || log_warning "Some packages failed to install"
+        elif [ "$pkg_manager" = "apt" ]; then
             local apt_update_output
             if ! apt_update_output=$(sudo apt-get update 2>&1); then
                 log_warning "apt-get update encountered errors (continuing anyway):"
@@ -412,21 +465,16 @@ install_modern_tools() {
                 echo "$apt_update_output" | grep -E "^E:" | head -3
                 log_info "Continuing with package installation..."
             fi
-
-            if ! sudo apt-get install -y "${apt_to_install[@]}"; then
-                log_warning "Some apt packages failed to install"
-            fi
-        elif command_exists dnf; then
-            sudo dnf install -y "${apt_to_install[@]}" || log_warning "Some packages failed to install"
-        elif command_exists pacman; then
-            sudo pacman -S --noconfirm "${apt_to_install[@]}" || log_warning "Some packages failed to install"
-        elif command_exists brew; then
-            brew install "${apt_to_install[@]}" || log_warning "Some packages failed to install"
+            sudo apt-get install -y "${pkgs_to_install[@]}" || log_warning "Some apt packages failed to install"
+        elif [ "$pkg_manager" = "dnf" ]; then
+            sudo dnf install -y "${pkgs_to_install[@]}" || log_warning "Some packages failed to install"
+        elif [ "$pkg_manager" = "pacman" ]; then
+            sudo pacman -S --noconfirm "${pkgs_to_install[@]}" || log_warning "Some packages failed to install"
         fi
     fi
 
-    # Install GitHub-release tools (for apt-based systems)
-    if [ ${#github_tools[@]} -gt 0 ]; then
+    # Install GitHub-release tools (for Linux systems without brew)
+    if [ "$pkg_manager" != "brew" ] && [ ${#github_tools[@]} -gt 0 ]; then
         log_info "Installing tools from GitHub releases..."
         for tool_desc in "${github_tools[@]}"; do
             local repo="${tool_desc%%:*}"

@@ -1,6 +1,12 @@
 # Fix for Ghostty and other terminals - ensure 256 color support
 export TERM=xterm-256color
 
+# PATH configuration
+# Homebrew (macOS) - puts newer bash and other tools first
+[[ -d "/opt/homebrew/bin" ]] && export PATH="/opt/homebrew/bin:$PATH"
+# UV tools and other user binaries
+[[ -d "$HOME/.local/bin" ]] && export PATH="$HOME/.local/bin:$PATH"
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -70,8 +76,9 @@ fzf-alias() {
 }
 alias als='fzf-alias'
 
-# Modern CLI tool aliases (if fd is installed as fdfind)
+# Modern CLI tool aliases (Ubuntu uses different binary names)
 command -v fdfind >/dev/null 2>&1 && alias fd='fdfind'
+command -v batcat >/dev/null 2>&1 && alias bat='batcat'
 
 # Source machine-specific configurations (if exists)
 # Use this file for GPU configs, secrets, and other machine-specific settings

@@ -24,6 +24,10 @@ Automated setup for a modern, powerful terminal environment with zsh, oh-my-zsh,
 - **colored-man-pages** - Colorized man pages
 - **pip** - Python pip completions
 
+### Python Tools
+- **uv** - Extremely fast Python package manager (installs Python CLI tools)
+- **nvitop** - Interactive NVIDIA GPU monitor (installed via uv)
+
 ### Modern CLI Tools
 - **btop** - System monitor (better htop)
 - **ripgrep (rg)** - Fast file search
@@ -68,9 +72,11 @@ After installation:
 5. **Installs powerlevel10k** - Beautiful theme
 6. **Installs external plugins** - All custom zsh plugins
 7. **Installs fzf** - Fuzzy finder for command line
-8. **Installs modern CLI tools** - All the productivity tools
-9. **Symlinks dotfiles** - Links .zshrc and .p10k.zsh to your home directory
-10. **Verifies terminal colors** - Ensures 256 color support
+8. **Installs uv** - Fast Python package manager
+9. **Installs modern CLI tools** - All the productivity tools
+10. **Installs Python CLI tools** - nvitop and other tools via uv
+11. **Symlinks dotfiles** - Links .zshrc and .p10k.zsh to your home directory
+12. **Verifies terminal colors** - Ensures 256 color support
 
 ## Installation Details
 

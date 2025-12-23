@@ -39,6 +39,7 @@ Automated setup for a modern, powerful terminal environment with zsh, oh-my-zsh,
 - **procs** - Better ps
 - **yazi** - Terminal file manager
 - **glow** - Markdown renderer
+- **lazygit** - Terminal UI for git
 
 ### Custom Aliases & Functions
 - `view` - Quick image viewer using feh

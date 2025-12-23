@@ -174,73 +174,215 @@ install_fzf() {
     log_success "fzf installed"
 }
 
+# Detect system architecture (returns both variants for pattern matching)
+get_arch() {
+    local arch
+    arch=$(uname -m)
+    case "$arch" in
+        x86_64) echo "x86_64" ;;
+        aarch64|arm64) echo "aarch64" ;;
+        *) echo "$arch" ;;
+    esac
+}
+
+# Get arm64 variant name (some projects use arm64, others use aarch64)
+get_arch_alt() {
+    local arch
+    arch=$(uname -m)
+    case "$arch" in
+        x86_64) echo "x86_64" ;;
+        aarch64|arm64) echo "arm64" ;;
+        *) echo "$arch" ;;
+    esac
+}
+
+# Install a tool from GitHub releases
+install_from_github() {
+    local repo="$1"
+    local binary_name="$2"
+    local asset_pattern="$3"
+    local extract_path="$4"  # Path inside archive to the binary (optional)
+
+    if command_exists "$binary_name"; then
+        log_success "$binary_name already installed"
+        return 0
+    fi
+
+    log_info "Installing $binary_name from GitHub..."
+
+    local tmp_dir
+    tmp_dir=$(mktemp -d)
+    local arch
+    arch=$(get_arch)
+
+    # Get latest release asset URL
+    local release_url="https://api.github.com/repos/$repo/releases/latest"
+    local asset_url
+    asset_url=$(curl -fsSL "$release_url" | grep -oP "\"browser_download_url\": \"\K[^\"]*${asset_pattern}[^\"]*" | head -1)
+
+    if [ -z "$asset_url" ]; then
+        log_warning "Could not find release for $binary_name (pattern: $asset_pattern)"
+        rm -rf "$tmp_dir"
+        return 1
+    fi
+
+    local filename
+    filename=$(basename "$asset_url")
+
+    # Download
+    if ! curl -fsSL -o "$tmp_dir/$filename" "$asset_url"; then
+        log_warning "Failed to download $binary_name"
+        rm -rf "$tmp_dir"
+        return 1
+    fi
+
+    # Extract and install
+    cd "$tmp_dir"
+    case "$filename" in
+        *.tar.gz|*.tgz)
+            tar -xzf "$filename"
+            ;;
+        *.tar.xz)
+            tar -xJf "$filename"
+            ;;
+        *.zip)
+            unzip -q "$filename"
+            ;;
+        *)
+            # Assume it's a raw binary
+            chmod +x "$filename"
+            sudo mv "$filename" "/usr/local/bin/$binary_name"
+            rm -rf "$tmp_dir"
+            log_success "$binary_name installed"
+            return 0
+            ;;
+    esac
+
+    # Find and install the binary
+    local binary_path
+    if [ -n "$extract_path" ]; then
+        binary_path="$extract_path"
+    else
+        binary_path=$(find . -name "$binary_name" -type f -executable 2>/dev/null | head -1)
+        if [ -z "$binary_path" ]; then
+            binary_path=$(find . -name "$binary_name" -type f 2>/dev/null | head -1)
+        fi
+    fi
+
+    if [ -n "$binary_path" ] && [ -f "$binary_path" ]; then
+        chmod +x "$binary_path"
+        sudo mv "$binary_path" "/usr/local/bin/$binary_name"
+        log_success "$binary_name installed"
+    else
+        log_warning "Could not find $binary_name binary in archive"
+        rm -rf "$tmp_dir"
+        return 1
+    fi
+
+    cd - >/dev/null
+    rm -rf "$tmp_dir"
+    return 0
+}
+
 # Install modern CLI tools
 install_modern_tools() {
     log_info "Installing modern CLI tools..."
 
-    local tools=(
-        "btop:system monitor"
-        "ripgrep:fast search (rg)"
-        "eza:better ls"
-        "fd-find:better find"
-        "bat:better cat"
-        "zoxide:smart cd (z)"
-        "dust:visual disk usage"
-        "git-delta:beautiful git diffs"
-        "sd:simpler sed"
-        "xh:better curl"
-        "tldr:quick cheat sheets"
-        "procs:better ps"
-        "yazi:terminal file manager"
-        "glow:markdown renderer"
+    local arch
+    arch=$(get_arch)
+    local arch_alt
+    arch_alt=$(get_arch_alt)
+
+    # Tools available via apt on Ubuntu
+    local apt_tools=(
+        "btop:btop:system monitor"
+        "ripgrep:rg:fast search"
+        "eza:eza:better ls"
+        "fd-find:fdfind:better find"
+        "bat:batcat:better cat"
+        "zoxide:zoxide:smart cd"
+        "git-delta:delta:beautiful git diffs"
+        "tldr:tldr:quick cheat sheets"
     )
 
-    local to_install=()
+    # Tools that need GitHub binary installation on Ubuntu
+    # Format: "repo:binary_name:asset_pattern:description"
+    # Note: Some projects use aarch64, others use arm64 for ARM architecture
+    local github_tools=()
+    if command_exists apt-get; then
+        github_tools=(
+            "bootandy/dust:dust:dust-.*${arch}.*linux.*gnu.*tar.gz:visual disk usage"
+            "chmln/sd:sd:sd-.*${arch}.*linux.*musl:simpler sed"
+            "ducaale/xh:xh:xh-.*${arch}.*linux.*musl.*tar.gz:better curl"
+            "dalance/procs:procs:procs-.*-${arch}-linux\\.zip:better ps"
+            "sxyazi/yazi:yazi:yazi-${arch}.*linux.*musl.*zip:terminal file manager"
+            "charmbracelet/glow:glow:glow_.*_Linux_${arch_alt}\\.tar\\.gz:markdown renderer"
+        )
+    fi
 
-    # Check which tools are missing
-    for tool_desc in "${tools[@]}"; do
-        local tool="${tool_desc%%:*}"
-        local desc="${tool_desc#*:}"
+    local apt_to_install=()
 
-        # Special handling for different package names
-        local check_cmd="$tool"
-        case "$tool" in
-            "ripgrep") check_cmd="rg" ;;
-            "fd-find") check_cmd="fdfind" ;;
-            "git-delta") check_cmd="delta" ;;
-        esac
+    # Check apt tools
+    for tool_desc in "${apt_tools[@]}"; do
+        local pkg="${tool_desc%%:*}"
+        local rest="${tool_desc#*:}"
+        local check_cmd="${rest%%:*}"
+        local desc="${rest#*:}"
 
         if command_exists "$check_cmd"; then
-            log_success "$desc already installed"
+            log_success "$desc ($check_cmd) already installed"
         else
-            to_install+=("$tool")
+            apt_to_install+=("$pkg")
         fi
     done
 
-    # Install missing tools
-    if [ ${#to_install[@]} -eq 0 ]; then
-        log_success "All modern tools already installed"
-        return 0
+    # Install apt packages
+    if [ ${#apt_to_install[@]} -gt 0 ]; then
+        log_info "Installing from apt: ${apt_to_install[*]}"
+
+        if command_exists apt-get; then
+            local apt_update_output
+            if ! apt_update_output=$(sudo apt-get update 2>&1); then
+                log_warning "apt-get update encountered errors (continuing anyway):"
+                echo "$apt_update_output" | grep -E "^(E:|W:)" | head -5
+            elif echo "$apt_update_output" | grep -qE "^E:"; then
+                log_warning "apt-get update reported errors (some repositories may be unavailable):"
+                echo "$apt_update_output" | grep -E "^E:" | head -3
+                log_info "Continuing with package installation..."
+            fi
+
+            if ! sudo apt-get install -y "${apt_to_install[@]}"; then
+                log_warning "Some apt packages failed to install"
+            fi
+        elif command_exists dnf; then
+            sudo dnf install -y "${apt_to_install[@]}" || log_warning "Some packages failed to install"
+        elif command_exists pacman; then
+            sudo pacman -S --noconfirm "${apt_to_install[@]}" || log_warning "Some packages failed to install"
+        elif command_exists brew; then
+            brew install "${apt_to_install[@]}" || log_warning "Some packages failed to install"
+        fi
     fi
 
-    log_info "Installing: ${to_install[*]}"
+    # Install GitHub-release tools (for apt-based systems)
+    if [ ${#github_tools[@]} -gt 0 ]; then
+        log_info "Installing tools from GitHub releases..."
+        for tool_desc in "${github_tools[@]}"; do
+            local repo="${tool_desc%%:*}"
+            local rest="${tool_desc#*:}"
+            local binary="${rest%%:*}"
+            rest="${rest#*:}"
+            local pattern="${rest%%:*}"
+            local desc="${rest#*:}"
 
-    if command_exists apt-get; then
-        sudo apt-get update && sudo apt-get install -y "${to_install[@]}"
-    elif command_exists dnf; then
-        sudo dnf install -y "${to_install[@]}"
-    elif command_exists yum; then
-        sudo yum install -y "${to_install[@]}"
-    elif command_exists pacman; then
-        sudo pacman -S --noconfirm "${to_install[@]}"
-    elif command_exists brew; then
-        brew install "${to_install[@]}"
-    else
-        log_warning "Unknown package manager. Please install tools manually: ${to_install[*]}"
-        return 0
+            if command_exists "$binary"; then
+                log_success "$desc ($binary) already installed"
+            else
+                install_from_github "$repo" "$binary" "$pattern" || log_warning "Failed to install $binary"
+            fi
+        done
     fi
 
-    log_success "Modern CLI tools installed"
+    log_success "Modern CLI tools installation complete"
 }
 
 # Symlink dotfiles

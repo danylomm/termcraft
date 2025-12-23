@@ -174,6 +174,67 @@ install_fzf() {
     log_success "fzf installed"
 }
 
+# Install uv (Python package manager)
+install_uv() {
+    if command_exists uv; then
+        log_success "uv already installed"
+        return 0
+    fi
+
+    log_info "Installing uv..."
+
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+
+    # Source the env to make uv available in this session
+    if [ -f "$HOME/.local/bin/env" ]; then
+        source "$HOME/.local/bin/env"
+    elif [ -f "$HOME/.cargo/env" ]; then
+        source "$HOME/.cargo/env"
+    fi
+
+    if command_exists uv; then
+        log_success "uv installed"
+    else
+        log_warning "uv installed but not in PATH yet (restart shell or source ~/.local/bin/env)"
+    fi
+}
+
+# Install Python CLI tools via uv
+install_uv_tools() {
+    if ! command_exists uv; then
+        log_warning "uv not installed, skipping uv tools"
+        return 1
+    fi
+
+    log_info "Installing Python CLI tools via uv..."
+
+    # List of Python CLI tools to install
+    # Format: "package_name:binary_name:description"
+    local uv_tools=(
+        "nvitop:nvitop:interactive NVIDIA GPU monitor"
+    )
+
+    for tool_desc in "${uv_tools[@]}"; do
+        local pkg="${tool_desc%%:*}"
+        local rest="${tool_desc#*:}"
+        local binary="${rest%%:*}"
+        local desc="${rest#*:}"
+
+        if uv tool list 2>/dev/null | grep -q "^$pkg "; then
+            log_success "$desc ($binary) already installed"
+        else
+            log_info "Installing $pkg ($desc)..."
+            if uv tool install "$pkg"; then
+                log_success "$desc ($binary) installed"
+            else
+                log_warning "Failed to install $pkg"
+            fi
+        fi
+    done
+
+    log_success "Python CLI tools installation complete"
+}
+
 # Detect system architecture (returns both variants for pattern matching)
 get_arch() {
     local arch
@@ -440,7 +501,9 @@ main() {
     install_powerlevel10k
     install_plugins
     install_fzf
+    install_uv
     install_modern_tools
+    install_uv_tools
     symlink_dotfiles
     setup_terminal_colors
 

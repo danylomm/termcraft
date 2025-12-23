@@ -317,6 +317,7 @@ install_modern_tools() {
             "dalance/procs:procs:procs-.*-${arch}-linux\\.zip:better ps"
             "sxyazi/yazi:yazi:yazi-${arch}.*linux.*musl.*zip:terminal file manager"
             "charmbracelet/glow:glow:glow_.*_Linux_${arch_alt}\\.tar\\.gz:markdown renderer"
+            "jesseduffield/lazygit:lazygit:lazygit_.*_linux_${arch_alt}\\.tar\\.gz:git terminal UI"
         )
     fi
 

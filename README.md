@@ -50,6 +50,10 @@ Automated setup for a modern, powerful terminal environment with zsh, oh-my-zsh,
 - `als` - Interactive alias browser with fzf
 - `fd` - Alias for fdfind (on systems where it's installed as fdfind)
 
+## Recommended Terminal
+
+This setup works with any modern terminal emulator. That said, I personally recommend [Ghostty](https://ghostty.org/) - a fast, feature-rich, and cross-platform terminal that I used while creating this config. It handles true colors, ligatures, and GPU acceleration beautifully out of the box.
+
 ## Quick Start
 
 ```bash

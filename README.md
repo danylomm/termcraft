@@ -1,6 +1,6 @@
-# Linux Terminal Setup
+# Termcraft
 
-Automated setup for a modern, powerful terminal environment with zsh, oh-my-zsh, powerlevel10k, and essential CLI tools.
+Automated setup for a modern, powerful terminal environment with zsh, oh-my-zsh, powerlevel10k, and essential CLI tools. Works on Linux and macOS.
 
 ## Features
 
@@ -53,8 +53,8 @@ Automated setup for a modern, powerful terminal environment with zsh, oh-my-zsh,
 ## Quick Start
 
 ```bash
-git clone git@github.com:danylomm/linux-setup.git
-cd linux-setup
+git clone git@github.com:danylomm/termcraft.git
+cd termcraft
 ./install.sh
 ```
 
@@ -97,7 +97,7 @@ The script automatically detects and uses your system's package manager:
 ## File Structure
 
 ```
-linux-setup/
+termcraft/
 ├── README.md              # This file
 ├── install.sh             # Main installation script
 ├── dotfiles/
@@ -141,7 +141,7 @@ p10k configure
 
 This will update your `~/.p10k.zsh` file. To save these changes to the repo:
 ```bash
-cp ~/.p10k.zsh /path/to/linux-setup/dotfiles/.p10k.zsh
+cp ~/.p10k.zsh /path/to/termcraft/dotfiles/.p10k.zsh
 ```
 
 ## Machine-Specific Configurations

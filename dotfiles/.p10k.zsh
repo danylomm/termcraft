@@ -52,6 +52,7 @@
     # context                 # user@host
     dir                       # current directory
     vcs                       # git status
+    anaconda                  # conda environment
     # command_execution_time  # previous command duration
     # =========================[ Line #2 ]=========================
     newline                   # \n
@@ -99,6 +100,12 @@
   # Don't show Python version.
   typeset -g POWERLEVEL9K_VIRTUALENV_SHOW_PYTHON_VERSION=false
   typeset -g POWERLEVEL9K_VIRTUALENV_{LEFT,RIGHT}_DELIMITER=
+
+  # Cyan Conda Environment.
+  typeset -g POWERLEVEL9K_ANACONDA_FOREGROUND=$cyan
+  # Don't show Python version next to conda env.
+  typeset -g POWERLEVEL9K_ANACONDA_SHOW_PYTHON_VERSION=false
+  typeset -g POWERLEVEL9K_ANACONDA_{LEFT,RIGHT}_DELIMITER=
 
   # Blue current directory.
   typeset -g POWERLEVEL9K_DIR_FOREGROUND=$blue

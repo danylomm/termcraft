@@ -191,6 +191,15 @@ Ensure the plugin is:
 ### fdfind vs fd
 On Debian/Ubuntu systems, `fd` is installed as `fdfind` to avoid conflicts. The .zshrc automatically creates an alias for this.
 
+## Tested Platforms
+
+This repository has been tested and verified on:
+- Ubuntu 24.04 LTS (ARM64)
+- Fedora 43 (x86_64)
+- macOS 15 Sequoia (ARM64/Apple Silicon)
+
+It should work on other Linux distributions and macOS versions, but these are the platforms where it's been thoroughly tested.
+
 ## Requirements
 
 - Git

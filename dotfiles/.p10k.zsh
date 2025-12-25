@@ -52,7 +52,6 @@
     # context                 # user@host
     dir                       # current directory
     vcs                       # git status
-    anaconda                  # conda environment
     # command_execution_time  # previous command duration
     # =========================[ Line #2 ]=========================
     newline                   # \n
@@ -63,6 +62,7 @@
   # Right prompt segments.
   typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(
     # =========================[ Line #1 ]=========================
+    anaconda                  # conda environment
     command_execution_time    # previous command duration
     virtualenv                # python virtual environment
     context                   # user@host
@@ -105,7 +105,8 @@
   typeset -g POWERLEVEL9K_ANACONDA_FOREGROUND=$cyan
   # Don't show Python version next to conda env.
   typeset -g POWERLEVEL9K_ANACONDA_SHOW_PYTHON_VERSION=false
-  typeset -g POWERLEVEL9K_ANACONDA_{LEFT,RIGHT}_DELIMITER=
+  typeset -g POWERLEVEL9K_ANACONDA_LEFT_DELIMITER='('
+  typeset -g POWERLEVEL9K_ANACONDA_RIGHT_DELIMITER=')'
 
   # Blue current directory.
   typeset -g POWERLEVEL9K_DIR_FOREGROUND=$blue

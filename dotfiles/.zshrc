@@ -38,7 +38,6 @@ plugins=(
 	sudo
 	fast-syntax-highlighting
 	zsh-completions
-	fzf
 	fzf-tab
 	docker
 	extract

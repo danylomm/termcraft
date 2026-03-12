@@ -141,7 +141,10 @@
   # Cyan ahead/behind arrows.
   typeset -g POWERLEVEL9K_VCS_{INCOMING,OUTGOING}_CHANGESFORMAT_FOREGROUND=$cyan
   # Don't show remote branch, current tag or stashes.
-  typeset -g POWERLEVEL9K_VCS_GIT_HOOKS=(vcs-detect-changes git-untracked git-aheadbehind)
+  # Removed git-untracked — scanning for untracked files is expensive in large repos.
+  typeset -g POWERLEVEL9K_VCS_GIT_HOOKS=(vcs-detect-changes git-aheadbehind)
+  # Skip untracked files check in repos with >100k files in the index.
+  typeset -g POWERLEVEL9K_VCS_MAX_INDEX_SIZE_DIRTY=100000
   # Don't show the branch icon.
   typeset -g POWERLEVEL9K_VCS_BRANCH_ICON=
   # When in detached HEAD state, show @commit where branch normally goes.

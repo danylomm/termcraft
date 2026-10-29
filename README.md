@@ -14,15 +14,17 @@ Automated setup for a modern, powerful terminal environment with zsh, oh-my-zsh,
 - **fast-syntax-highlighting** - Real-time syntax highlighting
 - **zsh-completions** - Additional completion definitions
 - **fzf-tab** - Replace zsh's default completion with fzf
-- **alias-tips** - Reminds you of existing aliases
-- **z** - Jump to frequently used directories
 - **git** - Git aliases and functions
 - **sudo** - Easily prefix commands with sudo (press ESC twice)
-- **docker** - Docker completions
 - **extract** - Universal archive extractor
 - **copypath** / **copyfile** - Copy file paths and contents
 - **colored-man-pages** - Colorized man pages
-- **pip** - Python pip completions
+- **z** - Jump to frequently used directories (only loaded as a fallback when zoxide isn't installed)
+
+### fzf Keybindings
+- `Ctrl-R` - Fuzzy search command history
+- `Ctrl-T` - Fuzzy pick a file
+- `Alt-C` - Fuzzy cd into a directory
 
 ### Python Tools
 - **uv** - Extremely fast Python package manager (installs Python CLI tools)
@@ -31,12 +33,12 @@ Automated setup for a modern, powerful terminal environment with zsh, oh-my-zsh,
 ### Modern CLI Tools
 - **btop** - System monitor (better htop)
 - **ripgrep (rg)** - Fast file search
-- **eza** - Better ls with icons and git status
+- **eza** - Better ls with git status (replaces `ls`, see aliases below)
 - **fd** - Better find, respects .gitignore
 - **bat** - Better cat with syntax highlighting
-- **zoxide (z)** - Smart cd that learns your habits
+- **zoxide** - Smart cd that learns your habits (`z foo` to jump, `zi` to pick with fzf)
 - **dust** - Visual disk usage
-- **delta** - Beautiful git diffs
+- **delta** - Beautiful git diffs (configured as git's pager by the install script)
 - **sd** - Simpler sed replacement
 - **xh** - Better curl for APIs
 - **tldr** - Quick command cheat sheets
@@ -48,7 +50,13 @@ Automated setup for a modern, powerful terminal environment with zsh, oh-my-zsh,
 ### Custom Aliases & Functions
 - `view` - Quick image viewer using feh
 - `als` - Interactive alias browser with fzf
-- `fd` - Alias for fdfind (on systems where it's installed as fdfind)
+- `ls` / `ll` / `la` / `lt` - eza listing, long + git status, long incl. hidden, 2-level tree (when eza is installed)
+- `fd` / `bat` - Aliases for `fdfind` / `batcat` (Debian/Ubuntu binary names)
+
+### Shell Behavior
+- **Locale fallback** - Uses `C.UTF-8` when the configured locale (default `en_US.UTF-8`) isn't generated, e.g. on fresh Ubuntu/DGX installs
+- **Fast prompt** - Powerlevel10k instant prompt, git untracked-file check disabled for large repos
+- **No auto-correction** - zsh's "did you mean" prompts are off
 
 ## Recommended Terminal
 
@@ -79,8 +87,9 @@ After installation:
 8. **Installs uv** - Fast Python package manager
 9. **Installs modern CLI tools** - All the productivity tools
 10. **Installs Python CLI tools** - nvitop and other tools via uv
-11. **Symlinks dotfiles** - Links .zshrc and .p10k.zsh to your home directory
-12. **Verifies terminal colors** - Ensures 256 color support
+11. **Configures delta** - Sets delta as git's pager (skipped if you already have a pager configured)
+12. **Symlinks dotfiles** - Links .zshrc and .p10k.zsh to your home directory
+13. **Verifies terminal colors** - Ensures 256 color support
 
 ## Installation Details
 
@@ -115,9 +124,10 @@ termcraft/
 
 ### Adding More Plugins
 
-1. Edit `scripts/plugin-urls.sh` and add your plugin to the `PLUGINS` array:
+1. Edit `scripts/plugin-urls.sh` and append your plugin to both arrays, at the same position:
    ```bash
-   ["plugin-name"]="https://github.com/user/plugin-repo"
+   PLUGIN_NAMES=( ... "plugin-name" )
+   PLUGIN_URLS=( ... "https://github.com/user/plugin-repo" )
    ```
 
 2. Edit `dotfiles/.zshrc` and add the plugin name to the `plugins` array

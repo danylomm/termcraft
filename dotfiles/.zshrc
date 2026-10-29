@@ -42,7 +42,6 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
-	z
 	git
 	zsh-autosuggestions
 	sudo
@@ -54,6 +53,8 @@ plugins=(
 	copyfile
 	colored-man-pages
 )
+# Fall back to oh-my-zsh's z plugin when zoxide isn't installed (zoxide is initialized below)
+command -v zoxide >/dev/null 2>&1 || plugins=(z $plugins)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -79,6 +80,17 @@ alias als='fzf-alias'
 # Modern CLI tool aliases (Ubuntu uses different binary names)
 command -v fdfind >/dev/null 2>&1 && alias fd='fdfind'
 command -v batcat >/dev/null 2>&1 && alias bat='batcat'
+
+# eza as ls (overrides oh-my-zsh's ls/ll/la)
+if command -v eza >/dev/null 2>&1; then
+  alias ls='eza --group-directories-first'
+  alias ll='eza -l --git --group-directories-first'
+  alias la='eza -la --git --group-directories-first'
+  alias lt='eza --tree --level=2 --group-directories-first'
+fi
+
+# zoxide smart cd: `z foo` jumps, `zi` picks interactively with fzf
+command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh)"
 
 # Source machine-specific configurations (if exists)
 # Use this file for GPU configs, secrets, and other machine-specific settings

@@ -146,14 +146,16 @@ install_plugins() {
 
     local zsh_custom="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
 
-    for plugin in "${!PLUGINS[@]}"; do
+    local i
+    for i in "${!PLUGIN_NAMES[@]}"; do
+        local plugin="${PLUGIN_NAMES[$i]}"
         local plugin_dir="$zsh_custom/plugins/$plugin"
 
         if [ -d "$plugin_dir" ]; then
             log_success "Plugin '$plugin' already installed"
         else
             log_info "Installing plugin: $plugin"
-            git clone --depth=1 "${PLUGINS[$plugin]}" "$plugin_dir"
+            git clone --depth=1 "${PLUGIN_URLS[$i]}" "$plugin_dir"
             log_success "Plugin '$plugin' installed"
         fi
     done
@@ -519,6 +521,28 @@ symlink_dotfiles() {
     done
 }
 
+# Configure delta as git's pager (skipped if a pager is already set)
+configure_delta() {
+    if ! command_exists delta; then
+        log_warning "delta not installed, skipping git pager setup"
+        return 0
+    fi
+
+    if [ -n "$(git config --global --get core.pager)" ]; then
+        log_success "git pager already configured ($(git config --global --get core.pager))"
+        return 0
+    fi
+
+    log_info "Configuring delta as git pager..."
+
+    git config --global core.pager delta
+    git config --global interactive.diffFilter "delta --color-only"
+    git config --global delta.navigate true
+    git config --global merge.conflictstyle diff3
+
+    log_success "delta configured as git pager"
+}
+
 # Setup terminal colors (256 color support)
 setup_terminal_colors() {
     log_info "Verifying terminal color support..."
@@ -552,6 +576,7 @@ main() {
     install_uv
     install_modern_tools
     install_uv_tools
+    configure_delta
     symlink_dotfiles
     setup_terminal_colors
 

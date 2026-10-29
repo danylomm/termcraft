@@ -9,6 +9,14 @@ export TERM=xterm-256color
 # fzf from git install (takes precedence over system fzf)
 [[ -d "$HOME/.fzf/bin" ]] && export PATH="$HOME/.fzf/bin:$PATH"
 
+# Locale - fall back to C.UTF-8 when the configured locale isn't generated (e.g. fresh Ubuntu/DGX)
+if [[ "$OSTYPE" == linux* ]]; then
+  _want_locale="${(L)${LANG:-en_US.UTF-8}//-/}"
+  locale -a 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr -d '-' | grep -qxF "$_want_locale" \
+    || export LANG=C.UTF-8 LC_ALL=C.UTF-8
+  unset _want_locale
+fi
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
